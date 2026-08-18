@@ -1,0 +1,22 @@
+# Secrets / local environment
+.env
+*.session
+*.session-journal
+
+# Runtime user/private data
+data/users.json
+data/authorization.json
+data/history/*
+data/wallet_data/*
+data/withdraw_requests_*/*
+data/bonus_tokens.json
+data/user_tasks.json
+data/mines_games.json
+
+# Local build/cache
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.idea/
+logs.txt
