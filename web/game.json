@@ -1,0 +1,15 @@
+{
+  "games": [
+    {
+      "id": "mines",
+      "name": "Минер",
+      "nameKey": "gameMines",
+      "description": "Найди все мины и умножь свой баланс!",
+      "descKey": "gameMinesDesc",
+      "url": "/game_mines",
+      "icon": "/sticer/green-screen-remover.png",
+      "bgColor": ["#7c3aed", "#4c1d95"],
+      "stickerUrl": "/sticer/green-screen-remover.png"
+    }
+  ]
+}
