@@ -1,0 +1,30 @@
+{
+  "slides": [
+    {
+      "id": 1,
+      "title": "Добро пожаловать в FGFE",
+      "description": "Инвестируй вместе с нами. FGFE — Free Ton for Everyone 10.04.2026",
+      "buttonText": "Узнать больше",
+      "buttonAction": "link",
+      "buttonValue": "https://t.me/fgfe_official",
+      "buttonIcon": "external",
+      "stickerUrl": "/sticer/ezgif.com-gif-maker.gif",
+      "stickerType": "image",
+      "stickerSpeed": 0.3,
+      "cardBackground": "linear-gradient(135deg, #c084fc 0%, #8b5cf6 100%)"
+    },
+    {
+      "id": 2,
+      "title": "DTrade - Лучший Трейд бот",
+      "description": "DTrade — покупай и продавй мем койны быстро и безопасно прямо сейчас!",
+      "buttonText": "Перейти",
+      "buttonAction": "link",
+      "buttonValue": "https://t.me/dtrade?start=11SihWvZWh",
+      "buttonIcon": "external",
+      "stickerUrl": "/sticer/plushpepe_agadt48aam2kgus.gif",
+      "stickerType": "image",
+      "stickerSpeed": 1.0,
+      "cardBackground": "linear-gradient(135deg, #dc143c 0%, #ff69b4 100%)"
+    }
+  ]
+}
