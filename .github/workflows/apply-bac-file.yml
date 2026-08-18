@@ -52,3 +52,5 @@ jobs:
           git add -A
           git commit -m "Apply bac/$target from TONFARM source"
           git push origin HEAD:main
+
+# retry bot payload
