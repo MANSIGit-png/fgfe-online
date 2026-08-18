@@ -1,0 +1,362 @@
+а на вывод <tg-emoji emoji-id='5411191101086276989'>👛</tg-emoji></b>\n\n"
+                f"<b>ID заявки:</b> <code>{request_id}</code>\n"
+                f"<blockquote><tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> Пользователь: {request_data.get('first_name', 'User')}\n"
+                f"<tg-emoji emoji-id='5411156449290134104'>👛</tg-emoji> Сумма: {request_data.get('receive_amount', 0):.2f} CrBot</blockquote>\n\n"
+                f"<tg-emoji emoji-id='5411583656802162641'>⬇️</tg-emoji> Выберите валюту для отправки пользователю:"
+            )
+
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="Отправить GRAM",
+                        callback_data=f"send_crbot_gram_{request_id}",
+                        icon_custom_emoji_id="5411228939748155514"
+                    ),
+                    InlineKeyboardButton(
+                        text="Отправить USDT",
+                        callback_data=f"send_crbot_usdt_{request_id}",
+                        icon_custom_emoji_id="5411335450642127469"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="Отменить",
+                        callback_data=f"reject_crbot_{request_id}",
+                        icon_custom_emoji_id="5411091552334289719"
+                    ),
+                    InlineKeyboardButton(
+                        text="Заблокировать",
+                        callback_data=f"block_crbot_{request_id}",
+                        icon_custom_emoji_id="5413673957255586481"
+                    )
+                ]
+            ])
+
+            await callback.message.edit_text(admin_message, parse_mode='HTML', reply_markup=keyboard)
+            return
+
+        if sub_action == 'approve':
+            user_id = request_data.get('user_id')
+            username = request_data.get('username', 'unknown')
+
+            if send_currency == 'GRAM':
+                send_amount = float(request_data.get('amount', 0))
+            elif send_currency == 'USDT':
+                send_amount = float(request_data.get('receive_amount', 0))
+            else:
+                send_amount = float(request_data.get('amount', 0))
+
+            receive_amount = float(request_data.get('receive_amount', 0))
+
+            print(f"✅ CrBot approve: отправка {send_amount} {send_currency} пользователю {user_id}")
+
+            await callback.message.edit_text(
+                f"⏳ Отправка {send_amount:.2f} {send_currency} пользователю...",
+                parse_mode='HTML'
+            )
+
+            try:
+                asset = 'TON' if send_currency == 'GRAM' else 'USDT'
+                transfer_result = send_crypto_pay_transfer(user_id=user_id, asset=asset, amount=send_amount)
+
+                if transfer_result.get('success'):
+                    request_data['status'] = 'approved'
+                    request_data['processed_at'] = datetime.now().isoformat()
+                    request_data['processed_by'] = ADMIN_CHAT_ID
+                    request_data['sent_currency'] = send_currency
+                    request_data['transfer_id'] = transfer_result.get('result', {}).get('transfer_id')
+                    save_request_data(file_path, request_data)
+
+                    send_user_notification(user_id, receive_amount, 'approve', 'CrBot')
+
+                    await callback.message.edit_text(
+                        f"<tg-emoji emoji-id='5411267268036302635'>✔️</tg-emoji> Заявка {request_id} <b>ПОДТВЕРЖДЕНА</b>!\n\n"
+                        f"<tg-emoji emoji-id='5411335450642127469'>💵</tg-emoji> Отправлено: {send_amount:.2f} {send_currency}\n"
+                        f"<tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> Пользователь: @{username}",
+                        parse_mode='HTML'
+                    )
+                    await callback.answer(f"✅ {send_amount:.2f} {send_currency} отправлено!", show_alert=True)
+
+                    try:
+                        await bot.send_message(
+                            chat_id=ADMIN_CHAT_ID,
+                            text=(
+                                f"<tg-emoji emoji-id='5411267268036302635'>✔️</tg-emoji> <b>Автоматическая отправка выполнена!</b>\n\n"
+                                f"<tg-emoji emoji-id='5411075768329479880'>📎</tg-emoji> Заявка: <code>{request_id}</code>\n"
+                                f"<tg-emoji emoji-id='5411335450642127469'>💵</tg-emoji> Отправлено: {send_amount:.2f} {send_currency}\n"
+                                f"<tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> Пользователь: @{username}"
+                            ),
+                            parse_mode='HTML'
+                        )
+                    except:
+                        pass
+                else:
+                    error = transfer_result.get('error', 'Неизвестная ошибка')
+                    await callback.message.edit_text(
+                        f"❌ Ошибка отправки!\nЗаявка: {request_id}\nОшибка: {error}",
+                        parse_mode='HTML'
+                    )
+                    await callback.answer(f"❌ Ошибка: {error}", show_alert=True)
+            except Exception as e:
+                print(f"❌ Ошибка CrBot approve: {e}")
+                import traceback
+                traceback.print_exc()
+                await callback.message.edit_text(f"❌ Ошибка: {str(e)}", parse_mode='HTML')
+                await callback.answer(f"❌ Ошибка: {str(e)}", show_alert=True)
+            return
+
+        if sub_action in ['reject', 'block']:
+            is_reject = sub_action == 'reject'
+            if is_reject:
+                user_id = request_data.get('user_id')
+                amount = float(request_data.get('amount', 0))
+                update_user_balance(user_id, amount, 'Возврат при отмене вывода CrBot', 'Отменено')
+                send_user_notification(user_id, amount, 'reject', 'GRAM')
+
+            request_data['status'] = 'rejected' if is_reject else 'blocked'
+            request_data['processed_at'] = datetime.now().isoformat()
+            request_data['processed_by'] = ADMIN_CHAT_ID
+            save_request_data(file_path, request_data)
+
+            status_text = "❌ ОТМЕНЕНА" if is_reject else "🔒 ЗАБЛОКИРОВАНА"
+            await callback.message.edit_text(f"✅ Заявка {request_id} {status_text}", parse_mode='HTML')
+            await callback.answer(f"Заявка {status_text}", show_alert=True)
+            return
+
+    # ====== GRAM / USDT ======
+    if action in ['approve', 'reject', 'block'] and len(parts) >= 2:
+        currency = parts[1].upper() if parts[1].lower() in ['gram', 'usdt'] else None
+        request_id = '_'.join(parts[2:]) if len(parts) > 2 else ''
+
+        if not currency:
+            await callback.answer("❌ Неизвестная валюта", show_alert=True)
+            return
+
+        print(f"💎 {currency}: action={action}, request_id={request_id}")
+
+        if action == 'approve':
+            request_data, file_path = load_request_data(request_id)
+            if not request_data:
+                await callback.answer("❌ Заявка не найдена", show_alert=True)
+                return
+
+            wallet_address = request_data.get('wallet_address')
+            receive_amount = float(request_data.get('receive_amount', 0))
+            amount = float(request_data.get('amount', 0))
+
+            await callback.message.edit_text(
+                f"<tg-emoji emoji-id='5418018703222543759'>⏳</tg-emoji> <b>Проверка транзакции...</b>\n\n"
+                f"<blockquote><tg-emoji emoji-id='5411075768329479880'>📎</tg-emoji> Кошелек: <code>{wallet_address}</code></blockquote>\n"
+                f"<tg-emoji emoji-id='5411335450642127469'>💵</tg-emoji> Сумма: {receive_amount:.2f} {currency}",
+                parse_mode='HTML'
+            )
+
+            payment_received, tx_hash = check_payment_received(
+                wallet_address=wallet_address,
+                expected_amount=receive_amount,
+                expected_comment=f"FGFE_{request_id}",
+                currency=currency
+            )
+
+            if payment_received:
+                commission_ton = amount * (WITHDRAW_COMMISSION / 100)
+                save_commission_safe('vivod', commission_ton)
+                print(f"💰 Записана комиссия вывода: {commission_ton:.2f} TON")
+
+                await callback.message.edit_text(
+                    f"<tg-emoji emoji-id='5411267268036302635'>✔️</tg-emoji> <b>Транзакция подтверждена!</b>\n\n"
+                    f"<tg-emoji emoji-id='5411075768329479880'>📎</tg-emoji> Заявка <code>{request_id}</code> <b>одобрена</b>.",
+                    parse_mode='HTML'
+                )
+
+                endpoint = f"{FLASK_URL}/api/withdraw_callback_usdt" if currency == 'USDT' else f"{FLASK_URL}/api/withdraw_callback"
+                response = requests.post(endpoint, json={'request_id': request_id, 'action': 'approve'}, timeout=10)
+
+                if tx_hash:
+                    short_hash = f"{tx_hash[:4]}...{tx_hash[-4:]}"
+                    tx_link = f"https://tonscan.org/tx/{tx_hash}"
+                    if currency == 'USDT':
+                        currency_emoji = "<tg-emoji emoji-id='5411335450642127469'>💵</tg-emoji>"
+                    else:
+                        currency_emoji = "<tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji>"
+
+                    await bot.send_message(
+                        chat_id=request_data.get('user_id'),
+                        text=(
+                            f"<tg-emoji emoji-id='5411267268036302635'>✔️</tg-emoji> "
+                            f"<b>Ваша заявка на вывод {receive_amount:.2f} {currency_emoji} одобрена!</b>\n\n"
+                            f"<tg-emoji emoji-id='5411156449290134104'>👛</tg-emoji>Средства отправлены на ваш кошелек.\n"
+                            f"<tg-emoji emoji-id='5411075768329479880'>📎</tg-emoji> "
+                            f"<a href='{tx_link}'>{short_hash}</a>"
+                        ),
+                        parse_mode='HTML'
+                    )
+
+                await callback.answer("✅ Заявка одобрена!", show_alert=True)
+            else:
+                await callback.message.edit_text(
+                    f"❌ Транзакция не найдена!\n\n"
+                    f"Убедитесь, что вы отправили {receive_amount:.2f} {currency}\n"
+                    f"на кошелек: <code>{wallet_address}</code>\n\n"
+                    f"Если вы уже отправили, подождите несколько минут\n"
+                    f"и нажмите кнопку ✅ еще раз.",
+                    parse_mode='HTML'
+                )
+                await callback.answer("❌ Транзакция не найдена", show_alert=True)
+            return
+
+        try:
+            endpoint = f"{FLASK_URL}/api/withdraw_callback_usdt" if currency == 'USDT' else f"{FLASK_URL}/api/withdraw_callback"
+            response = requests.post(endpoint, json={'request_id': request_id, 'action': action}, timeout=10)
+
+            if response.status_code == 200 and response.json().get('success'):
+                status_text = {
+                    'reject': f"❌ Заявка {currency} отклонена",
+                    'block': f"🔒 Заявка {currency} заблокирована"
+                }.get(action, "Обработано")
+
+                if action == 'reject':
+                    request_data, _ = load_request_data(request_id)
+                    if request_data:
+                        amount = float(request_data.get('amount', 0))
+                        user_id = request_data.get('user_id')
+                        update_user_balance(user_id, amount, f'Возврат при отмене вывода {currency}', 'Отменено')
+                        send_user_notification(user_id, amount, 'reject', currency)
+
+                await callback.answer(status_text, show_alert=True)
+                await callback.message.edit_text(f"✅ Заявка {request_id} {status_text}", parse_mode='HTML')
+            else:
+                error_msg = response.json().get('error', 'Неизвестная ошибка')
+                await callback.answer(f"❌ Ошибка: {error_msg}", show_alert=True)
+        except Exception as e:
+            print(f"❌ Ошибка GRAM/USDT: {e}")
+            await callback.answer(f"❌ Ошибка: {str(e)}", show_alert=True)
+
+games = {}
+
+
+@router.guest_message()
+async def handle_guest_message(message: types.Message):
+    """
+    Обрабатывает гостевые сообщения.
+    Формат: @fgramfe_bot сумма 🎲
+    Пример: @fgramfe_bot 100 🎲
+    """
+    user = message.from_user
+    text = message.text or ""
+
+    if not message.guest_query_id:
+        print("❌ Нет guest_query_id")
+        return
+
+    # Парсим сообщение: ищем число и эмодзи 🎲
+    parts = text.split()
+    bet = None
+
+    for part in parts:
+        if part.isdigit():
+            bet = float(part)
+            break
+
+    # Проверяем наличие 🎲
+    has_dice = "🎲" in text
+
+    if not bet or bet <= 0 or not has_dice:
+        response_text = (
+            f"<b>❌ Неправильный формат!</b>\n\n"
+            f"Используйте: <code>@fgramfe_bot (сумма) 🎲</code>\n"
+            f"Пример: <code>@fgramfe_bot 100 🎲</code>"
+        )
+        result = InlineQueryResultArticle(
+            id="1",
+            title="Ошибка",
+            input_message_content=InputTextMessageContent(
+                message_text=response_text,
+                parse_mode="HTML"
+            )
+        )
+        await message.answer_guest_query(result=result)
+        return
+
+    # Получаем баланс пользователя
+    balance = get_gram_balance(user.id)
+
+    print(f"💰 Баланс пользователя {user.id}: {balance} GRAM")
+
+    if balance < bet:
+        response_text = (
+            f"<b>❌ Недостаточно средств!</b>\n\n"
+            f"Ваш баланс: {balance:.2f} GRAM\n"
+            f"Ставка: {bet:.2f} GRAM"
+        )
+        result = InlineQueryResultArticle(
+            id="1",
+            title="Ошибка",
+            input_message_content=InputTextMessageContent(
+                message_text=response_text,
+                parse_mode="HTML"
+            )
+        )
+        await message.answer_guest_query(result=result)
+        return
+
+    # Банк = ставка + ставка - комиссия
+    bank = bet * 2 - COMA
+
+    # Сохраняем игру
+    chat_id = message.chat.id
+    games[chat_id] = {
+        'creator_id': user.id,
+        'creator_name': user.first_name,
+        'creator_username': user.username or "нет",
+        'creator_joined': False,  # ✅ ДОБАВЛЕНО
+        'player2_id': None,
+        'player2_name': None,
+        'player2_username': None,
+        'player2_joined': False,  # ✅ ДОБАВЛЕНО
+        'bet': bet,
+        'bank': bank,
+        'status': 'waiting',
+        'rolls': {},
+        'guest_query_id': message.guest_query_id,
+        'message_id': None
+    }
+
+    # ОБНОВЛЕННОЕ СООБЩЕНИЕ С ПРЕМИУМ ЭМОДЗИ
+    response_text = (
+        f"<tg-emoji emoji-id='5413739511341425163'>🎲</tg-emoji> "
+        f"<b>Игра - Кости!</b>\n\n"
+        f"<tg-emoji emoji-id='5411335450642127469'>💰</tg-emoji> "
+        f"<b>Ставка:</b> {bet:.2f} GRAM <tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji>\n\n"
+        f"<tg-emoji emoji-id='5418018703222543759'>⏳</tg-emoji> "
+        f"<b>Статус:</b> Ожидание игроков\n\n"
+        f"<i>Нажмите кнопку ниже, чтобы присоединиться!</i>"
+    )
+
+    # КНОПКА "ПРИСОЕДИНИТЬСЯ" - ЗЕЛЕНАЯ
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Присоединиться",
+                callback_data=f"join_game_{chat_id}",
+                style="success"
+            )
+        ]
+    ])
+
+    result = InlineQueryResultArticle(
+        id="1",
+        title="🎲 Игра в кости",
+        input_message_content=InputTextMessageContent(
+            message_text=response_text,
+            parse_mode="HTML"
+        ),
+        description=f"Ставка: {bet:.2f} GRAM",
+        reply_markup=keyboard
+    )
+
+    try:
+        await message.answer_guest_query(result=result)
+        print(f"✅ Игра создана в чате {chat_id}, ставка {bet:.2f} GRAM")
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
