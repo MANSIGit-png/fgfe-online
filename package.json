@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@ton/core": "^0.63.1",
+    "@ton/crypto": "^3.3.0",
+    "@ton/ton": "^16.3.0",
+    "buffer": "^6.0.3",
+    "ton": "^13.9.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^2.80.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
