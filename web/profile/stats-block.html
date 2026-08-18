@@ -1,0 +1,133 @@
+<div class="history-list" style="margin-top: 0; padding: 0; background: rgba(213, 174, 212, 0.08); backdrop-filter: blur(12px); border-radius: 20px;">
+    <div class="history-title" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 16px 16px; margin-bottom: 0px;" id="statsHeader">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="statsTitle" style="color: white; font-size: 16px; font-weight: 700;">Статистика</span>
+        </div>
+        <svg id="statsToggleIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" style="cursor: pointer; transition: transform 0.3s;">
+            <path d="M6 9L12 15L18 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </div>
+    <div id="statsContent" style="display: none;">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 16px 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <span id="turnoverLabel" style="font-size: 15px; font-weight: 500; color: #888;">Оборот</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="totalTurnoverValue" style="font-size: 16px; font-weight: 600; color: white;">0</span>
+                    <svg width="20" height="20" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.99754 2.07764C9.52965 2.07764 9.79593 2.07843 10.0366 2.15283C10.2495 2.2187 10.4471 2.32668 10.6177 2.47021C10.8103 2.63237 10.9541 2.85594 11.2417 3.30322L12.5122 5.27881C12.7023 5.57453 12.7969 5.7228 12.8227 5.87842C12.8454 6.01558 12.8311 6.15644 12.7798 6.28564C12.7215 6.43222 12.5967 6.55659 12.3481 6.80518L7.62938 11.5239C7.40924 11.7441 7.2983 11.8548 7.17137 11.896C7.06 11.9321 6.93997 11.9321 6.8286 11.896C6.70168 11.8548 6.59168 11.744 6.37156 11.5239L1.65184 6.80518C1.40336 6.5567 1.27947 6.43214 1.22117 6.28564C1.1698 6.15642 1.15451 6.01561 1.17723 5.87842C1.20303 5.7228 1.29767 5.57453 1.48778 5.27881L2.75828 3.30322C3.0458 2.85597 3.18972 2.63237 3.38231 2.47021C3.5528 2.32671 3.75046 2.2187 3.96336 2.15283C4.20401 2.07843 4.47033 2.07764 5.00242 2.07764H8.99754ZM8.61961 3.63623C8.55461 3.46116 8.30678 3.46125 8.24168 3.63623L7.79246 4.84912C7.7655 4.92165 7.70875 4.9794 7.63621 5.00635L6.42332 5.45459C6.24808 5.51956 6.24807 5.76754 6.42332 5.83252L7.63621 6.28076C7.70876 6.3077 7.76551 6.36545 7.79246 6.43799L8.24168 7.65088C8.3068 7.82582 8.5546 7.82591 8.61961 7.65088L9.06785 6.43799C9.09482 6.36526 9.15233 6.30767 9.22508 6.28076L10.437 5.83252C10.6124 5.7676 10.6124 5.5195 10.437 5.45459L9.22508 5.00635C9.15234 4.97942 9.09482 4.92183 9.06785 4.84912L8.61961 3.63623Z" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 16px 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <span id="recordBalanceLabel" style="font-size: 15px; font-weight: 500; color: #888;">Рекордный баланс</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="recordBalanceValue" style="font-size: 16px; font-weight: 600; color: white;">0</span>
+                    <svg width="20" height="20" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.99754 2.07764C9.52965 2.07764 9.79593 2.07843 10.0366 2.15283C10.2495 2.2187 10.4471 2.32668 10.6177 2.47021C10.8103 2.63237 10.9541 2.85594 11.2417 3.30322L12.5122 5.27881C12.7023 5.57453 12.7969 5.7228 12.8227 5.87842C12.8454 6.01558 12.8311 6.15644 12.7798 6.28564C12.7215 6.43222 12.5967 6.55659 12.3481 6.80518L7.62938 11.5239C7.40924 11.7441 7.2983 11.8548 7.17137 11.896C7.06 11.9321 6.93997 11.9321 6.8286 11.896C6.70168 11.8548 6.59168 11.744 6.37156 11.5239L1.65184 6.80518C1.40336 6.5567 1.27947 6.43214 1.22117 6.28564C1.1698 6.15642 1.15451 6.01561 1.17723 5.87842C1.20303 5.7228 1.29767 5.57453 1.48778 5.27881L2.75828 3.30322C3.0458 2.85597 3.18972 2.63237 3.38231 2.47021C3.5528 2.32671 3.75046 2.2187 3.96336 2.15283C4.20401 2.07843 4.47033 2.07764 5.00242 2.07764H8.99754ZM8.61961 3.63623C8.55461 3.46116 8.30678 3.46125 8.24168 3.63623L7.79246 4.84912C7.7655 4.92165 7.70875 4.9794 7.63621 5.00635L6.42332 5.45459C6.24808 5.51956 6.24807 5.76754 6.42332 5.83252L7.63621 6.28076C7.70876 6.3077 7.76551 6.36545 7.79246 6.43799L8.24168 7.65088C8.3068 7.82582 8.5546 7.82591 8.61961 7.65088L9.06785 6.43799C9.09482 6.36526 9.15233 6.30767 9.22508 6.28076L10.437 5.83252C10.6124 5.7676 10.6124 5.5195 10.437 5.45459L9.22508 5.00635C9.15234 4.97942 9.09482 4.92183 9.06785 4.84912L8.61961 3.63623Z" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 16px 8px 16px;">
+                <span id="totalWithdrawnLabel" style="font-size: 15px; font-weight: 500; color: #888;">Всего выведено</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span id="totalWithdrawnValue" style="font-size: 16px; font-weight: 600; color: white;">0</span>
+                    <svg width="20" height="20" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.99754 2.07764C9.52965 2.07764 9.79593 2.07843 10.0366 2.15283C10.2495 2.2187 10.4471 2.32668 10.6177 2.47021C10.8103 2.63237 10.9541 2.85594 11.2417 3.30322L12.5122 5.27881C12.7023 5.57453 12.7969 5.7228 12.8227 5.87842C12.8454 6.01558 12.8311 6.15644 12.7798 6.28564C12.7215 6.43222 12.5967 6.55659 12.3481 6.80518L7.62938 11.5239C7.40924 11.7441 7.2983 11.8548 7.17137 11.896C7.06 11.9321 6.93997 11.9321 6.8286 11.896C6.70168 11.8548 6.59168 11.744 6.37156 11.5239L1.65184 6.80518C1.40336 6.5567 1.27947 6.43214 1.22117 6.28564C1.1698 6.15642 1.15451 6.01561 1.17723 5.87842C1.20303 5.7228 1.29767 5.57453 1.48778 5.27881L2.75828 3.30322C3.0458 2.85597 3.18972 2.63237 3.38231 2.47021C3.5528 2.32671 3.75046 2.2187 3.96336 2.15283C4.20401 2.07843 4.47033 2.07764 5.00242 2.07764H8.99754ZM8.61961 3.63623C8.55461 3.46116 8.30678 3.46125 8.24168 3.63623L7.79246 4.84912C7.7655 4.92165 7.70875 4.9794 7.63621 5.00635L6.42332 5.45459C6.24808 5.51956 6.24807 5.76754 6.42332 5.83252L7.63621 6.28076C7.70876 6.3077 7.76551 6.36545 7.79246 6.43799L8.24168 7.65088C8.3068 7.82582 8.5546 7.82591 8.61961 7.65088L9.06785 6.43799C9.09482 6.36526 9.15233 6.30767 9.22508 6.28076L10.437 5.83252C10.6124 5.7676 10.6124 5.5195 10.437 5.45459L9.22508 5.00635C9.15234 4.97942 9.09482 4.92183 9.06785 4.84912L8.61961 3.63623Z" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function t(key, defaultValue) {
+            if (window.translations && window.translations[key]) {
+                return window.translations[key];
+            }
+            return defaultValue;
+        }
+
+        function updateTexts() {
+            const statsTitle = document.getElementById('statsTitle');
+            const turnoverLabel = document.getElementById('turnoverLabel');
+            const recordBalanceLabel = document.getElementById('recordBalanceLabel');
+            const totalWithdrawnLabel = document.getElementById('totalWithdrawnLabel');
+
+            if (statsTitle) statsTitle.textContent = t('stats', 'Статистика');
+            if (turnoverLabel) turnoverLabel.textContent = t('turnover', 'Оборот');
+            if (recordBalanceLabel) recordBalanceLabel.textContent = t('recordBalance', 'Рекордный баланс');
+            if (totalWithdrawnLabel) totalWithdrawnLabel.textContent = t('totalWithdrawn', 'Всего выведено');
+        }
+
+        window.updateStatsTexts = updateTexts;
+
+        function init() {
+            updateTexts();
+
+            const header = document.getElementById('statsHeader');
+            const content = document.getElementById('statsContent');
+            const toggleIcon = document.getElementById('statsToggleIcon');
+
+            if (!header || !content) return;
+
+            const isOpen = localStorage.getItem('statsOpen') === 'true';
+            if (isOpen) {
+                content.style.display = 'block';
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.display = 'none';
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+            }
+
+            header.onclick = function(e) {
+                e.stopPropagation();
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+                    localStorage.setItem('statsOpen', 'true');
+                } else {
+                    content.style.display = 'none';
+                    if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+                    localStorage.setItem('statsOpen', 'false');
+                }
+            };
+
+            loadStats();
+
+            window.addEventListener('translationsLoaded', updateTexts);
+        }
+
+        async function loadStats() {
+            const userId = window.telegramUser?.id;
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/user_stats?user_id=${userId}`);
+                const data = await response.json();
+                const stats = data.stats || {};
+
+                const turnoverEl = document.getElementById('totalTurnoverValue');
+                const recordEl = document.getElementById('recordBalanceValue');
+                const withdrawnEl = document.getElementById('totalWithdrawnValue');
+
+                if (turnoverEl) turnoverEl.textContent = formatNumber(stats.total_turnover);
+                if (recordEl) recordEl.textContent = formatNumber(stats.record_balance);
+                if (withdrawnEl) withdrawnEl.textContent = formatNumber(stats.total_withdrawn);
+            } catch(e) {
+            }
+        }
+
+        function formatNumber(value) {
+            const num = parseFloat(value);
+            return isNaN(num) ? '0' : num.toFixed(1);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
