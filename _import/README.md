@@ -1,0 +1,1 @@
+Temporary import folder for the prepared TONFARM project archive parts. The import workflow reconstructs the archive, expands `web/`, `bac/`, and `data/`, commits them to this branch, then removes `_import/`.
