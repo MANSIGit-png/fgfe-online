@@ -1,0 +1,377 @@
+<div class="referral-modern-wrapper">
+    <style>
+        .referral-modern-wrapper {
+            width: 100%;
+        }
+        .referral-modern-wrapper .ref-container {
+            background: rgba(213, 174, 212, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 16px 20px 20px 20px;
+            position: relative;
+        }
+        .referral-modern-wrapper h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 20px 0;
+            line-height: 1.3;
+        }
+        .referral-modern-wrapper h2 span {
+            background: linear-gradient(135deg, #c084fc, #8b5cf6);
+            padding: 0 8px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .referral-modern-wrapper .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .referral-modern-wrapper .stat-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 14px 16px;
+            text-align: center;
+        }
+        .referral-modern-wrapper .stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            line-height: 1.2;
+        }
+        .referral-modern-wrapper .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 6px;
+        }
+        .referral-modern-wrapper .action-buttons {
+            display: flex;
+            gap: 12px;
+            position: relative;
+        }
+        .referral-modern-wrapper .send-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #c084fc, #8b5cf6);
+            border: none;
+            border-radius: 40px;
+            padding: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .referral-modern-wrapper .send-btn:active {
+            transform: scale(0.97);
+        }
+        .referral-modern-wrapper .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 14px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .referral-modern-wrapper .copy-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .referral-modern-wrapper .copy-btn svg {
+            stroke: rgba(255, 255, 255, 0.7);
+            width: 18px;
+            height: 18px;
+        }
+        .share-loading {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast-message {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 9999;
+            animation: fadeInOut 2s ease-in-out forwards;
+            border: 1px solid rgba(255,255,255,0.08);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(15px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
+        }
+    </style>
+
+    <div class="ref-container">
+        <h2 id="referralTitleText"><span>10%</span> от дохода казино!</h2>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="refCount">0</div>
+                <div class="stat-label" id="referralInvitedLabel">Приглашено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="refEarned">0.00</div>
+                <div class="stat-label" id="referralEarnedLabel">Заработано</div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="send-btn" id="sendBtn">
+                <span id="referralSendText">Отправить</span>
+                <div class="share-loading" id="shareLoading"></div>
+            </button>
+            <div class="copy-btn" id="copyBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M7 2L16.5 2L21 6.5V19" stroke="currentColor" stroke-linecap="round"/>
+                    <path d="M3 20.5V6.5C3 5.67157 3.67157 5 4.5 5H14.2515C14.4106 5 14.5632 5.06321 14.6757 5.17574L17.8243 8.32426C17.9368 8.43679 18 8.5894 18 8.74853V20.5C18 21.3284 17.3284 22 16.5 22H4.5C3.67157 22 3 21.3284 3 20.5Z" stroke="currentColor" stroke-linecap="round"/>
+                    <path d="M14 5V8.4C14 8.73137 14.2686 9 14.6 9H18" stroke="currentColor" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var tg = window.Telegram.WebApp;
+
+        var userId = window.telegramUser?.id;
+        if (!userId && window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        }
+
+        var botName = 'fgramfe_bot';
+        var referralLink = '';
+
+        function formatNumber(value) {
+            var num = parseFloat(value);
+            return isNaN(num) ? '0.00' : num.toFixed(2);
+        }
+
+        function showToast(message) {
+            document.querySelectorAll('.toast-message').forEach(function(el) {
+                el.remove();
+            });
+
+            var actionButtons = document.querySelector('.action-buttons');
+            if (!actionButtons) return;
+
+            var toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.textContent = message;
+            actionButtons.appendChild(toast);
+
+            setTimeout(function() {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 2500);
+        }
+
+        function t(key, defaultValue) {
+            if (window.translations && window.translations[key]) {
+                return window.translations[key];
+            }
+            return defaultValue;
+        }
+
+        function updateTexts() {
+            var referralTitle = document.getElementById('referralTitleText');
+            if (referralTitle) {
+                var percent = t('referralPercent', '10%');
+                var text = t('referralTitle', 'Приглашай друзей и получай');
+                var fromCasino = t('referralFromCasino', 'от дохода казино!');
+                referralTitle.innerHTML = text + ' <span>' + percent + '</span> ' + fromCasino;
+            }
+
+            var invitedLabel = document.getElementById('referralInvitedLabel');
+            if (invitedLabel) invitedLabel.textContent = t('friendsInvited', 'Приглашено');
+
+            var earnedLabel = document.getElementById('referralEarnedLabel');
+            if (earnedLabel) earnedLabel.textContent = t('earnedTon', 'Заработано');
+
+            var sendText = document.getElementById('referralSendText');
+            if (sendText) sendText.textContent = t('send', 'Отправить');
+        }
+        window.updateReferralTexts = updateTexts;
+
+        function copyToClipboard() {
+            if (!referralLink) {
+                showToast(t('linkNotLoaded', 'Ссылка ещё не загружена'));
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(referralLink).then(function() {
+                    showToast(t('linkCopied', 'Ссылка скопирована!'));
+                }).catch(function() {
+                    fallbackCopy();
+                });
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        function fallbackCopy() {
+            var tempInput = document.createElement('input');
+            tempInput.value = referralLink;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                showToast(t('linkCopied', 'Ссылка скопирована!'));
+            } catch (e) {
+                showToast('Не удалось скопировать');
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function shareReferralImage() {
+            var loading = document.getElementById('shareLoading');
+            var sendText = document.getElementById('referralSendText');
+
+            loading.style.display = 'inline-block';
+            sendText.textContent = t('send', 'Отправить');
+
+            if (!referralLink) {
+                showToast('Ссылка ещё не загружена');
+                loading.style.display = 'none';
+                sendText.textContent = t('send', 'Отправить');
+                return;
+            }
+
+            fetch('/api/prepare_referral_message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ referral_link: referralLink, user_id: userId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.msg_id) {
+                    window.Telegram.WebApp.shareMessage(data.msg_id);
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                loading.style.display = 'none';
+                sendText.textContent = t('send', 'Отправить');
+            });
+        }
+
+        function resetButtons() {
+            var loading = document.getElementById('shareLoading');
+            var sendText = document.getElementById('referralSendText');
+            if (loading) loading.style.display = 'none';
+            if (sendText) sendText.textContent = t('send', 'Отправить');
+        }
+
+        function sendToFriend() {
+            shareReferralImage();
+        }
+
+        function loadBotName() {
+            return fetch('/api/bot_name')
+                .then(function(response) {
+                    if (response.ok) return response.json();
+                    return null;
+                })
+                .then(function(data) {
+                    if (data && data.bot_name) botName = data.bot_name;
+                })
+                .catch(function(e) {
+                    console.error(e);
+                });
+        }
+
+        function loadReferralData() {
+            if (!userId) {
+                document.getElementById('refCount').textContent = '0';
+                document.getElementById('refEarned').textContent = '0.00';
+                return Promise.resolve(null);
+            }
+
+            return fetch('/api/referral_data?user_id=' + userId)
+                .then(function(response) {
+                    if (response.ok) return response.json();
+                    return null;
+                })
+                .then(function(data) {
+                    if (data) {
+                        document.getElementById('refCount').textContent = data.referral_count || 0;
+                        document.getElementById('refEarned').textContent = formatNumber(data.total_referral_earnings || 0);
+                    }
+                    return data;
+                })
+                .catch(function(error) {
+                    return null;
+                });
+        }
+
+        function buildReferralLink() {
+            if (!userId) return Promise.resolve();
+
+            return loadBotName().then(function() {
+                referralLink = 'https://t.me/' + botName + '/app?startapp=' + userId;
+            }).catch(function(e) {});
+        }
+
+        function setupEventListeners() {
+            var sendBtn = document.getElementById('sendBtn');
+            if (sendBtn) {
+                var newSendBtn = sendBtn.cloneNode(true);
+                sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+                newSendBtn.onclick = sendToFriend;
+            }
+
+            var copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                var newCopyBtn = copyBtn.cloneNode(true);
+                copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
+                newCopyBtn.onclick = copyToClipboard;
+            }
+        }
+
+        function init() {
+            updateTexts();
+            buildReferralLink().then(function() {
+                loadReferralData();
+            });
+            setupEventListeners();
+            window.addEventListener('translationsLoaded', updateTexts);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
