@@ -1,0 +1,15 @@
+{
+  "games": [
+    {
+      "id": "dungeon_quest",
+      "name": "Бытлы",
+      "nameKey": "Бытлы",
+      "description": "Сражайся против других пользвателей ",
+      "descKey": "dungeonQuestDesc",
+      "url": "/games/Batl",
+      "icon": "⚔️",
+      "stickerUrl": "/sticer/dungeon_icon.png",
+      "bgColor": ["#7c3aed", "#4f46e5"]
+    }
+  ]
+}
