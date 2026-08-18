@@ -1,0 +1,14 @@
+.venv/
+venv/
+node_modules/
+.idea/
+__pycache__/
+*.py[cod]
+*.session
+*.log
+.env
+.DS_Store
+# runtime/private data
+data/history/*
+!data/history/.gitkeep
+data/authorization.json
