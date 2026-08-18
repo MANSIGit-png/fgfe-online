@@ -1,0 +1,41 @@
+name: Apply BAC file
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bac/_*_payload.gz.b64'
+      - '.github/workflows/apply-bac-file.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-one-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply one payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload="$(find bac -maxdepth 1 -name '_*_payload.gz.b64' | sort | head -n 1 || true)"
+          if [ -z "$payload" ]; then
+            echo 'No payload to apply'
+            exit 0
+          fi
+          base="$(basename "$payload")"
+          target="${base#_}"
+          target="${target%_payload.gz.b64}.py"
+          base64 -d "$payload" | gzip -d > "bac/$target"
+          python -m py_compile "bac/$target"
+          rm -f "$payload" bac/_tmp_functions_marker.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "bac/$target" "$payload" bac/_tmp_functions_marker.txt 2>/dev/null || true
+          git add -A
+          git commit -m "Apply bac/$target from TONFARM source"
+          git push origin HEAD:main
