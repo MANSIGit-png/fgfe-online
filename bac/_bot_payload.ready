@@ -2,3 +2,4 @@ ready
 trigger-bot-build
 retry
 force-assemble
+final-trigger
