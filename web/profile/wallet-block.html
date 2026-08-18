@@ -1,0 +1,55 @@
+<section class="wallet-profile-block">
+<style>
+.wallet-profile-block{font-family:Arial,sans-serif}.wallet-card{background:rgba(213,174,212,.08);backdrop-filter:blur(12px);border-radius:20px;padding:16px;color:#fff}.wallet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.wallet-title{font-size:16px;font-weight:700}.wallet-address{font-size:12px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}.wallet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.wallet-btn{border:0;border-radius:16px;padding:12px 10px;font-weight:700;color:#fff;cursor:pointer}.wallet-connect{background:linear-gradient(135deg,#c084fc,#8b5cf6)}.wallet-secondary{background:rgba(255,255,255,.09)}.wallet-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.58);opacity:0;pointer-events:none;transition:.2s;z-index:9998}.wallet-sheet-overlay.active{opacity:1;pointer-events:auto}.wallet-sheet{position:fixed;left:0;right:0;bottom:0;max-width:500px;margin:0 auto;background:#151518;border-radius:26px 26px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(110%);transition:.25s ease;z-index:9999;color:#fff;box-shadow:0 -10px 40px rgba(0,0,0,.5)}.wallet-sheet.active{transform:translateY(0)}.wallet-sheet-handle{width:44px;height:4px;border-radius:3px;background:#555;margin:0 auto 18px}.wallet-sheet-title{font-size:22px;font-weight:700;margin-bottom:6px}.wallet-sheet-subtitle{font-size:13px;color:#888;margin-bottom:18px}.wallet-field{background:rgba(255,255,255,.07);border-radius:16px;padding:13px 14px;margin-bottom:10px}.wallet-field-label{font-size:11px;color:#888;margin-bottom:5px}.wallet-field-value{font-size:14px;word-break:break-all}.wallet-sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+</style>
+<div class="wallet-card">
+    <div class="wallet-head">
+        <div>
+            <div class="wallet-title" id="walletBlockTitle">Кошелек</div>
+            <div class="wallet-address" id="walletAddressText">Не подключен</div>
+        </div>
+        <button class="wallet-btn wallet-connect" id="walletConnectBtn">Подключить</button>
+    </div>
+    <div class="wallet-actions">
+        <button class="wallet-btn wallet-secondary" id="walletOpenBtn">Открыть</button>
+        <button class="wallet-btn wallet-secondary" id="walletDisconnectBtn">Отключить</button>
+    </div>
+</div>
+<div class="wallet-sheet-overlay" id="sheetOverlay"></div>
+<div class="wallet-sheet" id="walletSheet">
+    <div class="wallet-sheet-handle"></div>
+    <div class="wallet-sheet-title">Кошелек</div>
+    <div class="wallet-sheet-subtitle">Подключение и управление TON-кошельком</div>
+    <div class="wallet-field"><div class="wallet-field-label">Адрес</div><div class="wallet-field-value" id="walletSheetAddress">Не подключен</div></div>
+    <div class="wallet-field"><div class="wallet-field-label">TON</div><div class="wallet-field-value" id="walletSheetBalance">0</div></div>
+    <div class="wallet-sheet-actions">
+        <button class="wallet-btn wallet-connect" id="walletSheetConnect">Подключить</button>
+        <button class="wallet-btn wallet-secondary" id="walletSheetClose">Закрыть</button>
+    </div>
+</div>
+<script>
+(function(){
+ const overlay=document.getElementById('sheetOverlay'),sheet=document.getElementById('walletSheet');
+ const addressEl=document.getElementById('walletAddressText'),sheetAddress=document.getElementById('walletSheetAddress');
+ function open(){overlay?.classList.add('active');sheet?.classList.add('active')}
+ function close(){overlay?.classList.remove('active');sheet?.classList.remove('active')}
+ function setAddress(address){const v=address||'Не подключен';if(addressEl)addressEl.textContent=v;if(sheetAddress)sheetAddress.textContent=v}
+ async function connect(){
+   try{
+     if(window.tonConnectUI?.openModal){await window.tonConnectUI.openModal();return}
+     if(window.tonConnectUI?.connectWallet){await window.tonConnectUI.connectWallet();return}
+     window.Telegram?.WebApp?.showAlert?.('Откройте подключение кошелька через TON Connect');
+   }catch(e){console.error(e)}
+ }
+ async function disconnect(){try{if(window.tonConnectUI?.disconnect)await window.tonConnectUI.disconnect();setAddress(null)}catch(e){console.error(e)}}
+ document.getElementById('walletOpenBtn')?.addEventListener('click',open);
+ document.getElementById('walletConnectBtn')?.addEventListener('click',connect);
+ document.getElementById('walletSheetConnect')?.addEventListener('click',connect);
+ document.getElementById('walletDisconnectBtn')?.addEventListener('click',disconnect);
+ document.getElementById('walletSheetClose')?.addEventListener('click',close);
+ overlay?.addEventListener('click',close);
+ const current=window.tonConnectUI?.wallet?.account?.address;setAddress(current);
+ if(window.tonConnectUI?.onStatusChange)window.tonConnectUI.onStatusChange(w=>setAddress(w?.account?.address));
+})();
+</script>
+</section>
