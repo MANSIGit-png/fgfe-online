@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>FGFE — Профиль</title>
+    <script src="https://telegram.org/js/telegram-web-app.js?62"></script>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body{margin:0;background:#000;color:#fff;font-family:Arial,sans-serif}.profile-page{max-width:500px;margin:0 auto;padding:20px 16px 110px}.profile-title{font-size:26px;font-weight:700;margin:8px 0 14px}.profile-card{background:rgba(213,174,212,.15);backdrop-filter:blur(12px);padding:12px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:24px}.profile-left{display:flex;align-items:center;gap:16px;min-width:0}.profile-avatar{width:70px;height:70px;border-radius:50%;background:rgba(213,174,212,.3);display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;flex-shrink:0}.profile-avatar img{width:100%;height:100%;object-fit:cover}.profile-info{min-width:0}.profile-name{font-size:20px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.copy-id{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;cursor:pointer}.balances-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}.balance-badge{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:40px;font-weight:700}.balance-badge-ton{background:rgba(0,136,204,.18)}.balance-badge-points{background:rgba(241,170,5,.2)}.block-slot{margin-bottom:12px}.loading-block{background:rgba(213,174,212,.08);border-radius:20px;padding:18px;color:#888}.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(192,132,252,.3);padding:12px 16px 24px;z-index:100}.nav-row{max-width:500px;margin:0 auto;display:flex;justify-content:space-around}.nav-link{color:#ddd;text-decoration:none;font-size:13px;padding:8px 14px;border-radius:18px}.nav-link.active{color:#c084fc;background:rgba(192,132,252,.12)}
+    </style>
+</head>
+<body>
+<main class="profile-page">
+    <div class="profile-title" id="profileTitle">Профиль</div>
+    <section class="profile-card">
+        <div class="profile-left">
+            <div class="profile-avatar"><span id="profileAvatarEmoji">👤</span><img id="profileAvatarImg" style="display:none" alt=""></div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">User</div>
+                <div class="copy-id" id="profileId">ID: <span id="profileIdText">---</span></div>
+            </div>
+        </div>
+        <div class="balances-right">
+            <div class="balance-badge balance-badge-ton" id="tonBalanceBtn"><span>TON</span><span id="tonBalance">0</span></div>
+            <div class="balance-badge balance-badge-points"><span>⚡</span><span id="pointsBalance">0</span></div>
+        </div>
+    </section>
+    <div id="stats-container" class="block-slot"><div class="loading-block">Загрузка статистики...</div></div>
+    <div id="referral-container" class="block-slot"><div class="loading-block">Загрузка рефералов...</div></div>
+    <div id="history-container" class="block-slot"><div class="loading-block">Загрузка истории...</div></div>
+    <div id="wallet-container" class="block-slot"><div class="loading-block">Загрузка кошелька...</div></div>
+</main>
+<nav class="bottom-nav"><div class="nav-row"><a class="nav-link" href="/">Главная</a><a class="nav-link active" href="/profile">Профиль</a><a class="nav-link" href="/bonus">Бонус</a><a class="nav-link" href="/settings">Настройки</a></div></nav>
+<script>
+const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand()}
+const tgUser=tg?.initDataUnsafe?.user;const params=new URLSearchParams(location.search);const userId=tgUser?.id||params.get('user_id');
+function fmt(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(1):'0'}
+async function loadUser(){if(!userId)return;try{const r=await fetch(`/api/user?user_id=${encodeURIComponent(userId)}`);if(!r.ok)return;const d=await r.json();document.getElementById('profileName').textContent=tgUser?.first_name||d.name||'User';document.getElementById('profileIdText').textContent=userId;document.getElementById('tonBalance').textContent=fmt(d.ton_balance);document.getElementById('pointsBalance').textContent=Math.floor(Number(d.tame)||0)+'s';if(tgUser?.photo_url){document.getElementById('profileAvatarEmoji').style.display='none';const img=document.getElementById('profileAvatarImg');img.src=tgUser.photo_url;img.style.display='block'}}catch(e){console.error(e)}}
+async function loadBlock(id,url){const el=document.getElementById(id);try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);el.innerHTML=await r.text()}catch(e){el.innerHTML='<div class="loading-block">Ошибка загрузки блока</div>'}}
+document.getElementById('profileId').addEventListener('click',async()=>{if(userId&&navigator.clipboard)await navigator.clipboard.writeText(String(userId))});
+loadUser();loadBlock('stats-container','/profile/stats-block.html');loadBlock('referral-container','/profile/referral-block.html');loadBlock('history-container','/profile/history-block.html');loadBlock('wallet-container','/profile/wallet-block.html');
+</script>
+<script src="/script.js" defer></script>
+</body>
+</html>
