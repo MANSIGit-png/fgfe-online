@@ -1,0 +1,63 @@
+name: Import TONFARM project
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/tonfarm-split-pages
+    paths:
+      - '_import/fgfe-online-repo-ready.zip.part-*'
+
+permissions:
+  contents: write
+
+jobs:
+  import-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tonfarm-split-pages
+          fetch-depth: 0
+
+      - name: Check all archive parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in 00 01 02 03 04 05 06 07 08; do
+            test -f "_import/fgfe-online-repo-ready.zip.part-$n" || {
+              echo "Archive part $n is not uploaded yet. Waiting for all 9 parts."
+              exit 0
+            }
+          done
+          touch /tmp/all_parts_ready
+
+      - name: Rebuild and unpack project
+        if: hashFiles('/tmp/all_parts_ready') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat _import/fgfe-online-repo-ready.zip.part-* > /tmp/fgfe-online-repo-ready.zip
+          mkdir -p /tmp/fgfe-import
+          unzip -q /tmp/fgfe-online-repo-ready.zip -d /tmp/fgfe-import
+          rsync -a --delete-excluded /tmp/fgfe-import/fgfe_migrated/ ./ \
+            --exclude='.git/' \
+            --exclude='_import/' \
+            --exclude='.github/'
+
+      - name: Commit imported project
+        if: hashFiles('/tmp/all_parts_ready') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf _import
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "Import TONFARM web bac data project"
+          git push origin HEAD:agent/tonfarm-split-pages
