@@ -1,0 +1,33 @@
+name: Assemble BAC source file
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bac/.transfer/*.ready'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assemble source
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker=$(ls bac/.transfer/*.ready | head -n1)
+          name=$(basename "$marker" .ready)
+          cat bac/.transfer/${name}.part-* | base64 -d | gzip -d > "bac/${name}"
+          python -m py_compile "bac/${name}"
+          rm -f bac/.transfer/${name}.part-* "$marker"
+          rmdir bac/.transfer 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Refactor ${name} shared backend logic"
+          git push origin HEAD:main
