@@ -1,0 +1,432 @@
+2635'>✔️</tg-emoji> "
+            f"<b>Ваша заявка на вывод {amount:.2f} {currency_emoji} одобрена!</b>\n\n"
+            f"<tg-emoji emoji-id='5411191101086276989'>👛</tg-emoji>Средства отправлены на ваш кошелек."
+        )
+        # ✅ Добавляем ссылку ТОЛЬКО для GRAM и USDT (не для CrBot)
+        if tx_hash and currency != 'CrBot':
+            short_hash = f"{tx_hash[:4]}...{tx_hash[-4:]}"
+            tx_link = f"https://tonscan.org/tx/{tx_hash}"
+            text += f"\n\n<tg-emoji emoji-id='5411075768329479880'>📎</tg-emoji> <a href='{tx_link}'>{short_hash}</a>"
+
+    elif status == 'reject':
+        text = (
+            f"<tg-emoji emoji-id='5411091552334289719'>❌</tg-emoji> "
+            f"<b>Ваша заявка на вывод {amount:.2f} {currency_emoji} отклонена.</b>\n\n"
+            f"Средства возвращены на баланс."
+        )
+    else:
+        text = (
+            f"<tg-emoji emoji-id='5413673957255586481'>🔒</tg-emoji> "
+            f"<b>Ваша заявка на вывод {amount:.2f} {currency_emoji} заблокирована.</b>\n\n"
+            f"Обратитесь в поддержку."
+        )
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    try:
+        response = requests.post(url, json={'chat_id': user_chat_id, 'text': text, 'parse_mode': 'HTML'}, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"❌ Ошибка уведомления {currency}: {e}")
+        return False
+
+
+# ==================== CRYPTO PAY ====================
+
+def send_crypto_pay_transfer(user_id, asset, amount):
+    url = "https://pay.crypt.bot/api/transfer"
+
+    headers = {
+        'Crypto-Pay-API-Token': CRYPTO_PAY_TOKEN,
+        'Content-Type': 'application/json'
+    }
+
+    spend_id = f"{user_id}_{int(time.time())}_{secrets.token_hex(4)}"
+
+    data = {
+        'user_id': int(user_id),
+        'asset': asset,
+        'amount': str(amount),
+        'spend_id': spend_id
+    }
+
+    try:
+        response = requests.post(url, json=data, headers=headers, timeout=30)
+        result = response.json()
+
+        if result.get('ok'):
+            print(f"✅ Перевод {amount} {asset} пользователю {user_id} выполнен!")
+            return {'success': True, 'result': result['result']}
+        else:
+            print(f"❌ Ошибка: {result.get('error')}")
+            return {'success': False, 'error': result.get('error')}
+
+    except Exception as e:
+        print(f"❌ Ошибка запроса: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+# ==================== ЗАЯВКИ ====================
+
+def get_pending_withdraw_requests():
+    pending_requests = []
+
+    folders = [
+        os.path.join(DATA_DIR, 'withdraw_requests_gram'),
+        os.path.join(DATA_DIR, 'withdraw_requests_usdt'),
+        os.path.join(DATA_DIR, 'withdraw_requests_crbot')
+    ]
+
+    for folder in folders:
+        if not os.path.exists(folder):
+            continue
+
+        files = glob.glob(os.path.join(folder, '*.json'))
+
+        for file_path in files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    request_data = json.load(f)
+
+                if request_data.get('status', 'pending') == 'pending':
+                    filename = os.path.basename(file_path)
+                    request_id = filename.replace('.json', '')
+
+                    currency = request_data.get('currency', 'GRAM')
+                    amount = float(request_data.get('amount', 0))
+                    receive_amount = float(request_data.get('receive_amount', amount))
+
+                    pending_requests.append({
+                        'request_id': request_id,
+                        'file_path': file_path,
+                        'user_id': request_data.get('user_id'),
+                        'username': request_data.get('username', 'unknown'),
+                        'first_name': request_data.get('first_name', 'User'),
+                        'amount': amount,
+                        'receive_amount': receive_amount,
+                        'wallet_address': request_data.get('wallet_address', ''),
+                        'created_at': request_data.get('created_at', ''),
+                        'currency': currency
+                    })
+            except Exception as e:
+                print(f"Ошибка чтения {file_path}: {e}")
+
+    pending_requests.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    return pending_requests
+
+
+# ==================== КОМАНДЫ БОТА ====================
+
+@router.message(Command("start"))
+async def start(message: Message):
+    user = message.from_user
+    user_id = str(user.id)
+
+    args = message.text.split()
+    referrer_id = args[1] if len(args) > 1 else None
+
+    is_new = register_user(user.id, user.username or "unknown", user.first_name or "")
+
+    if referrer_id and referrer_id != user_id and is_new:
+        add_referral(user_id, referrer_id)
+
+    # ✅ Получаем данные пользователя
+    user_data = get_user_data(user.id)
+    # ✅ Берем ton_balance (реальный баланс в GRAM)
+    balance = float(user_data.get('ton_balance', 0))
+
+    if is_new:
+        welcome_msg = (
+            f"<tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> "
+            f"Добро пожаловать, <b>{user.first_name}!</b>"
+        )
+        await message.answer(welcome_msg, parse_mode='HTML')
+
+        info_msg = (
+            f"<tg-emoji emoji-id='5413360699520884043'>✨</tg-emoji> Наш канал - @FGFEofficial\n\n"
+            f"<tg-emoji emoji-id='5411156449290134104'>👛</tg-emoji> <b>Баланс: {balance:.2f}</b> <tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji>\n\n"
+            f"<blockquote><tg-emoji emoji-id='5411086132085562116'>🆓</tg-emoji> Бесплатные 0.5 <tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji> <b>каждый день</b></blockquote>"
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Играть",
+                web_app=WebAppInfo(url="https://fgfe.online"),
+                style="primary",
+                icon_custom_emoji_id="5411123103164046669"
+            )]
+        ])
+
+        await message.answer(info_msg, parse_mode='HTML', reply_markup=keyboard)
+
+    else:
+        info_msg = (
+            f"<tg-emoji emoji-id='5413360699520884043'>✨</tg-emoji> Наш канал - @FGFEofficial\n\n"
+            f"<tg-emoji emoji-id='5411156449290134104'>👛</tg-emoji> <b>Баланс: {balance:.2f}</b> <tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji>\n\n"
+            f"<blockquote><tg-emoji emoji-id='5411086132085562116'>🆓</tg-emoji> Бесплатные 0.5 <tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji> <b>каждый день</b></blockquote>"
+        )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Играть",
+                web_app=WebAppInfo(url="https://fgfe.online"),
+                style="primary",
+                icon_custom_emoji_id="5411123103164046669"
+            )]
+        ])
+
+        await message.answer(info_msg, parse_mode='HTML', reply_markup=keyboard)
+
+@router.message(Command("post"))
+async def post_command(message: Message):
+    """Отправляет пост с изображением в канал"""
+    user_id = message.from_user.id
+
+    # Проверка прав админа
+    if user_id != ADMIN_CHAT_ID:
+        await message.answer("❌ У вас нет прав для этой команды.")
+        return
+
+    channel_id = "-1003923363941"  # ID канала
+
+    # Текст поста
+    text = (
+        f"<tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> "
+        f"<b>What Is FGFE?</b>\n"
+        f"<tg-emoji emoji-id='5413739511341425163'>🎁</tg-emoji> "
+        f"<b>Free Gram For Everyone</b>\n\n"
+        f"<tg-emoji emoji-id='5411371914914473558'>🥇</tg-emoji> "
+        f"<b>FGFE</b> - is a meme token on the TON blockchain, as well as a casino project with various pvp and pve games\n\n"
+        f"<tg-emoji emoji-id='5411086132085562116'>🆓</tg-emoji> <b>Bonuses</b>\n"
+        f"<tg-emoji emoji-id='5427095085810490858'>✅</tg-emoji> Daily reward of 0.5 GRAM\n"
+        f"<tg-emoji emoji-id='5427095085810490858'>✅</tg-emoji> Weekly and daily draws\n"
+        f"<tg-emoji emoji-id='5427095085810490858'>✅</tg-emoji> Gram stacking system\n"
+        f"<tg-emoji emoji-id='5427095085810490858'>✅</tg-emoji> Referral rewards"
+    )
+
+    # Кнопка
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="Open FGFE",
+            url="https://t.me/fgramfe_bot/app"
+        )]
+    ])
+
+    # URL изображения
+    image_url = "https://fgfe.online/sticer/post.jpg"
+
+    try:
+        await bot.send_photo(
+            chat_id=channel_id,
+            photo=image_url,
+            caption=text,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+        await message.answer("✅ Пост успешно опубликован в канале!")
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при отправке: {str(e)}")
+
+@router.message(Command("balance"))
+async def balance(message: Message):
+    bal = get_balance(message.from_user.id)
+    await message.answer(f"💰 Ваш баланс: {bal} FGFE")
+
+
+@router.message(Command("profile"))
+async def profile(message: Message):
+    user_data = get_user_data(message.from_user.id)
+    profile_text = f"""
+📱 **Ваш профиль**
+ID: {user_data['id']}
+👤 Имя: {user_data['name']}
+📝 Username: {user_data['username']}
+💰 Баланс: {user_data['balans']} FGFE
+🔗 Кошелек: {user_data['kosh']}
+🏆 Уровень: {user_data['lvl']}
+    """
+    await message.answer(profile_text, parse_mode='Markdown')
+
+@router.message(Command("zarre"))
+async def show_pending_requests(message: Message):
+    user_id = message.from_user.id
+
+    if user_id != ADMIN_CHAT_ID:
+        await message.answer("❌ У вас нет прав для этой команды.")
+        return
+
+    pending_requests = get_pending_withdraw_requests()
+
+    if not pending_requests:
+        await message.answer("📭 Нет активных заявок на вывод.")
+        return
+
+    count = len(pending_requests)
+
+    keyboard = []
+    for req in pending_requests[:20]:
+        created_time = req.get('created_at', '').replace('T', ' ')[:16]
+        currency = req.get('currency', 'GRAM')
+
+        # Выбираем эмодзи в зависимости от валюты
+        if currency == 'USDT':
+            emoji = '💵'
+            emoji_id = "5411335450642127469"
+        elif currency == 'CrBot':
+            emoji = '👛'
+            emoji_id = "5411191101086276989"
+        else:
+            emoji = '💎'
+            emoji_id = "5411228939748155514"
+
+        button_text = f"{emoji} {req['amount']:.2f} | {created_time}"
+        keyboard.append([
+            InlineKeyboardButton(
+                text=button_text,
+                callback_data=f"view_{req['request_id']}",
+                icon_custom_emoji_id=emoji_id  # ✅ КАСТОМНЫЙ ЭМОДЗИ
+            )
+        ])
+
+    keyboard.append([
+        InlineKeyboardButton(
+            text="🔄 Обновить",
+            callback_data="refresh_requests",
+            icon_custom_emoji_id="5418018703222543759"  # ⌛️
+        )
+    ])
+
+    reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+    # Считаем по всем валютам
+    total_gram = sum(r['amount'] for r in pending_requests if r.get('currency') == 'GRAM')
+    total_usdt = sum(r['amount'] for r in pending_requests if r.get('currency') == 'USDT')
+    total_crbot = sum(r['amount'] for r in pending_requests if r.get('currency') == 'CrBot')
+    total = total_crbot + total_gram + total_usdt
+    total_receive = total * (100 - WITHDRAW_COMMISSION) / 100
+
+    message_text = (
+        f"<b><tg-emoji emoji-id='5411081098383893968'>🔔</tg-emoji> Активные заявки на вывод</b>\n\n"
+        f"<tg-emoji emoji-id='5411106498820480176'>✉️</tg-emoji> <b>Количество:</b> {count}\n\n"
+        f"<blockquote><tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji> <b>GRAM:</b> {total_gram:.2f} GRAM\n"
+        f"<tg-emoji emoji-id='5411335450642127469'>💵</tg-emoji> <b>USDT:</b> {total_usdt:.2f} USDT\n"
+        f"<tg-emoji emoji-id='5411191101086276989'>👛</tg-emoji> <b>CrBot:</b> {total_crbot:.2f} GRAM</blockquote>\n\n"
+        f"<tg-emoji emoji-id='5411156449290134104'>👛</tg-emoji> <b>Всего к выдаче:</b> {total_receive:.2f} (с комиссией)\n\n"
+    )
+
+    await message.answer(message_text, parse_mode='HTML', reply_markup=reply_markup)
+
+@router.message(Command("bonus"))
+async def bonus_command(message: Message):
+    user_id = message.from_user.id
+
+    if user_id != ADMIN_CHAT_ID:
+        await message.answer("❌ У вас нет прав для этой команды.")
+        return
+
+    args = message.text.split()
+    if len(args) < 2:
+        await message.answer("❌ Использование: /bonus user_id\nПример: /bonus 123456789")
+        return
+
+    target_user_id = args[1]
+
+    if not target_user_id.isdigit():
+        await message.answer("❌ ID должен быть числом. Пример: /bonus 123456789")
+        return
+
+    token = secrets.token_hex(16)
+
+    bonus_data_file = os.path.join(DATA_DIR, 'bonus_tokens.json')
+    os.makedirs(os.path.dirname(bonus_data_file), exist_ok=True)
+
+    bonus_tokens = {}
+    if os.path.exists(bonus_data_file):
+        try:
+            with open(bonus_data_file, 'r', encoding='utf-8') as f:
+                bonus_tokens = json.load(f)
+        except:
+            bonus_tokens = {}
+
+    bonus_tokens[token] = {
+        'user_id': target_user_id,
+        'created_at': time.time(),
+        'used': False
+    }
+
+    with open(bonus_data_file, 'w', encoding='utf-8') as f:
+        json.dump(bonus_tokens, f, indent=2, ensure_ascii=False)
+
+    bot_username = (await bot.get_me()).username
+    bonus_url = f"https://t.me/{bot_username}/app?startapp=bonus_page_{token}&mode=compact"
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="Забрать",
+            url=bonus_url,
+            style="success",
+            icon_custom_emoji_id="5413360699520884043"
+
+        )]
+    ])
+
+    try:
+        await bot.send_message(
+            chat_id=target_user_id,
+            text=(
+                "<tg-emoji emoji-id='5411086132085562116'>🆓</tg-emoji> "
+                "<b>Тебе начислили бонус 0.5</b> "
+                "<tg-emoji emoji-id='5411228939748155514'>💎</tg-emoji>\n\n"
+                "<blockquote><tg-emoji emoji-id='5411267268036302635'>✔️</tg-emoji>Нажми на кнопку ниже, чтобы получить</blockquote>"
+            ),
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+        await message.answer(f"✅ Бонусное сообщение отправлено пользователю {target_user_id}")
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при отправке: {str(e)}")
+
+# ==================== ГЛАВНЫЙ ОБРАБОТЧИК CALLBACK ====================
+
+
+@router.callback_query()
+async def handle_callback(callback: CallbackQuery):
+    """Главный обработчик всех callback'ов"""
+    callback_data = callback.data
+    if callback_data.startswith("join_game_"):
+        await callback.answer()
+
+        chat_id = int(callback_data.replace("join_game_", ""))
+
+        if chat_id not in games:
+            await bot.send_message(
+                chat_id=callback.from_user.id,
+                text="❌ Игра уже завершена или отменена.",
+                parse_mode='HTML'
+            )
+            return
+
+        game = games[chat_id]
+        user_id = callback.from_user.id
+
+        # Проверяем, кто нажал
+        if user_id == game['creator_id']:
+            if game['creator_joined']:
+                await callback.answer("❌ Вы уже присоединились!", show_alert=True)
+                return
+            game['creator_joined'] = True
+        else:
+            if game['player2_joined']:
+                await callback.answer("❌ Второй игрок уже присоединился!", show_alert=True)
+                return
+            if game['player2_id'] is None:
+                game['player2_id'] = user_id
+                game['player2_name'] = callback.from_user.first_name
+                game['player2_username'] = callback.from_user.username or "нет"
+            game['player2_joined'] = True
+
+        # Проверяем баланс
+        balance = get_gram_balance(user_id)
+        bet = game['bet']
+
+        if balance < bet:
+          
